@@ -32,7 +32,7 @@ staging_events_table_create= ("""CREATE TABLE IF NOT EXISTS staging_events ( art
                                                                              sessionId          int,         
                                                                              song               varchar,
                                                                              status             int,
-                                                                             ts                 int,
+                                                                             ts                 bigint,
                                                                              userAgent          varchar,
                                                                              userId             int           
 
@@ -53,11 +53,11 @@ staging_songs_table_create = ("""CREATE TABLE IF NOT EXISTS staging_songs (  num
 """)
 
 songplay_table_create = ("""CREATE TABLE IF NOT EXISTS songplays ( songplay_id    int    PRIMARY KEY NOT NULL,
-                                                                   start_time     timestamp,
+                                                                   start_time     timestamp                    NOT NULL                 ,
                                                                    user_id        int                          NOT NULL,
                                                                    level          varchar,
-                                                                   song_id        varchar,
-                                                                   artist_id      varchar,
+                                                                   song_id        varchar                      NOT NULL,
+                                                                   artist_id      varchar                      NOT NULL,
                                                                    session_id     int                          NOT NULL,
                                                                    location       varchar,
                                                                    user_agent     varchar 
@@ -112,7 +112,8 @@ staging_songs_copy = ("""copy staging_songs from 's3://udacity-dend/song_data'
 
 # FINAL TABLES
 
-songplay_table_insert = ("""INSERT INTO songplays (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent) 
+songplay_table_insert = ("""INSERT INTO songplays (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
+
 select ts as start_time
        userId as user_id,
        level,
@@ -123,15 +124,18 @@ select ts as start_time
 from staging_events e
 join staging_songs  s on e.song = s.title
 
+ON CONFLICT (user_id) DO UPDATE SET level = EXCLUDED.level
 """)
 
-user_table_insert = ("""INSERT INTO users (user_id, first_name, last_name, gender, level) 
+user_table_insert = ("""INSERT INTO users (user_id, first_name, last_name, gender, level)
 select distinct userId as user_id,
                 firstName as first_name,
                 lastName as last_name,
                 gender,
                 level
 from staging_evnets
+
+ON CONFLICT (user_id) DO UPDATE SET level = EXCLUDED.level
 
 """)
 
