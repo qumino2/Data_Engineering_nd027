@@ -123,8 +123,6 @@ select ts as start_time
        userAgent as user_agent
 from staging_events e
 join staging_songs  s on e.song = s.title
-
-ON CONFLICT (user_id) DO UPDATE SET level = EXCLUDED.level
 """)
 
 user_table_insert = ("""INSERT INTO users (user_id, first_name, last_name, gender, level)
@@ -135,25 +133,23 @@ select distinct userId as user_id,
                 level
 from staging_evnets
 
-ON CONFLICT (user_id) DO UPDATE SET level = EXCLUDED.level
-
 """)
 
 song_table_insert = ("""INSERT INTO songs (song_id, title, artist_id, year, duration) 
-select song_id,
-       title,
-       artist_id,
-       year,
-       duration
+select distinct song_id,
+                title,
+                artist_id,
+                year,
+                duration
 from staging_songs
 """)
 
 artist_table_insert = ("""INSERT INTO artists (artist_id, name, location, lattitude, longitude) 
-select artist_id,
-       name,
-       location,
-       latitude,
-       longitude
+select distinct artist_id,
+                name,
+                location,
+                latitude,
+                longitude
 from staging_songs
 
 """)
